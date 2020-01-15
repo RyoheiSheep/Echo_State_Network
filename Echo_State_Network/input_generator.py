@@ -60,6 +60,75 @@ class InputGenerator:
             ys[i+1] = ys[i] + dy
             zs[i+1] = zs[i] + dz
         
+           
+        xs = sp.stats.zscore(xs, axis = None)
+        ys = sp.stats.zscore(ys, axis =  None)
+        zs = sp.stats.zscore(zs, axis =  None)
+        xs  = (xs- np.min(xs))/(np.max(xs)-np.min(xs))
+        ys  = (ys- np.min(ys))/(np.max(ys)-np.min(ys))
+        zs  = (zs- np.min(zs))/(np.max(zs)-np.min(zs))
+        matrix = np.append(np.append([xs],[ys], axis = 0),[zs], axis = 0)
+        np.savetxt('Lorentz.txt', matrix.T)
+        
+    def generate_henon(self):
+        def henon(x, y, a=1.4, b=0.3):
+            x_dot = 1-a*x*x + y
+            y_dot = b*x
+            return np.array([x_dot]), np.array([y_dot])
+    
+        stepCnt = int((self.end_time-self.start_time)/dt) ######時間ステップ##
+        xs = np.zeros(stepCnt +1) 
+        ys = np.zeros(stepCnt +1)
+        
+                
+        xs[0], ys[0] = (0.1, 0.)
+        
+        for i in range(stepCnt):
+            x,y = xs[i],ys[i]
+                    
+            xs[i+1], ys[i+1] = henon(x, y)
+                    
+            # xs  = (xs- np.min(xs))/(np.max(xs)-np.min(xs))
+            # ys  = (ys- np.min(ys))/(np.max(ys)-np.min(ys))
+            # zs  = (zs- np.min(zs))/(np.max(zs)-np.min(zs))
+        xs = sp.stats.zscore(xs, axis = None)
+        ys = sp.stats.zscore(ys, axis =  None)
+                
+        matrix = np.append([xs],[ys], axis = 0)
+        np.savetxt('Henon.txt', matrix.T)
+        
+    def generate_rossler(self):
+        def lorenz(x, y, z, a=0.15, b = 0.20,c = 10.0 ):
+            x_dot = -y -z
+            y_dot = x + a*y
+            z_dot = b + x*z - c*z
+            return np.array([x_dot, y_dot, z_dot])
+    
+        t=0             ##### 初期時間######
+        dt = 0.01       ##### 微分間隔######
+        stepCnt = int((self.end_time-self.start_time)/dt) ######時間ステップ##
+        xs = np.zeros(stepCnt +1) 
+        ys = np.zeros(stepCnt +1)
+        zs = np.zeros(stepCnt +1)
+                
+        xs[0], ys[0], zs[0] = (0.1, 0.5, 1.2)
+        
+        for i in range(stepCnt):
+            x,y,z=xs[i],ys[i],zs[i]
+        
+            k0 = dt * lorenz(x,y,z)
+            k1 = dt * lorenz(x+k0[0]/2., y+k0[1]/2., z+k0[2]/2.)
+            k2 = dt * lorenz(x+k1[0]/2., y+k1[1]/2., z+k1[2]/2.)
+            k3 = dt * lorenz(x+k2[0], y+k2[1], z+k2[2])
+        
+            dx = (k0[0]+2.0*k1[0]+2.0*k2[0]+k3[0])/6.0
+            dy = (k0[1]+2.0*k1[1]+2.0*k2[1]+k3[1])/6.0
+            dz = (k0[2]+2.0*k1[2]+2.0*k2[2]+k3[2])/6.0
+            
+            xs[i+1] = xs[i] + dx
+            ys[i+1] = ys[i] + dy
+            zs[i+1] = zs[i] + dz
+        
             # xs  = (xs- np.min(xs))/(np.max(xs)-np.min(xs))
             # ys  = (ys- np.min(ys))/(np.max(ys)-np.min(ys))
             # zs  = (zs- np.min(zs))/(np.max(zs)-np.min(zs))
@@ -68,7 +137,7 @@ class InputGenerator:
         zs = sp.stats.zscore(zs, axis =  None)
         
         matrix = np.append(np.append([xs],[ys], axis = 0),[zs], axis = 0)
-        np.savetxt('Lorentz.txt', matrix.T)
+        np.savetxt('Rossler.txt', matrix.T)
     
 T = 610
 RATIO_TRAIN = 0.6
@@ -80,3 +149,5 @@ num_time_step = int(T/dt) +1000
 GeneratingInput = InputGenerator(start_time= 0, end_time= T, num_time_steps= num_time_step)
 GeneratingInput.generate_lorentz()
 # GeneratingInput.generate_logistic()
+# GeneratingInput.generate_henon()
+# GeneratingInput.generate_rossler()
