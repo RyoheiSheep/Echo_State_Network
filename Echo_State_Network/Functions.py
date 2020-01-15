@@ -4,26 +4,37 @@ import numpy as np
     ##############  Get Reservoir State   #############################
     ###################################################################
 # @jit
-def get_reservoir_states(inputs, states_init, weight_input, weight_reservoir, leak_rate):
+def get_reservoir_states(inputs, states_init, weight_input, weight_reservoir, leak_rate, weight_return, output_return = None, input_bias = None):
     states = states_init
-    for i in range(1, len(inputs),1):
-        states[i] = (1-leak_rate)* np.array([states[i-1]]) + leak_rate *np.tanh(np.dot(np.array([inputs[i-1]]), weight_input) +np.dot( np.array([states[i]]), weight_reservoir))
-    # print(states)
-    # print("shape of states")
-    # print(states.shape)
+    # if output_return is None:
+    #     for i in range(1, len(inputs),1):
+    #         states[i] = (1-leak_rate)* np.array([states[i-1]]) + leak_rate *np.tanh(np.dot(np.array([inputs[i-1]]), weight_input) +np.dot( np.array([states[i-1]]), weight_reservoir))
+    #     # print(states)
+    #     # print("shape of states")
+    #     # print(states.shape)
+    #     return states
+    # else:
+    #     for i in range(1, len(inputs),1):
+    #         states[i] = (1-leak_rate)* np.array([states[i-1]]) + leak_rate *np.tanh(np.dot(np.array([inputs[i-1]]), weight_input) +np.dot( np.array([states[i-1]]), weight_reservoir) )
+    #     return states
+    if input_bias is None:
+         for i in range(1, len(inputs),1):
+            states[i] = (1-leak_rate)* np.array([states[i-1]]) + leak_rate *np.tanh(np.dot(np.array([inputs[i-1]]), weight_input) +np.dot( np.array([states[i-1]]), weight_reservoir))
+    else: 
+        inputs =  np.column_stack((np.ones((inputs.shape[0],1)),inputs))
+        for i in range(1, len(inputs),1):
+            states[i] = (1-leak_rate)* np.array([states[i-1]]) + leak_rate *np.tanh(np.dot(np.array([inputs[i-1]]), weight_input) +np.dot( np.array([states[i-1]]), weight_reservoir))
     return states
     ######################################################################
     #####################   Train  #######################################
     ######################################################################
 # @jit
-def train(num_reservoir_node, num_output_node, train_data_output, states, weight_output_initial,wash_time, LAMBDA = 0.00221):
+def train(num_reservoir_node, num_output_node, train_data_output, states, weight_output_initial, LAMBDA = 0.00221):
     
     ################# Set Length of Training #########
     
     Length_Training = len(train_data_output)
     #############Initialize Variables#################
-    states = states[wash_time:]
-    
     re = 0
     kp = np.zeros((num_reservoir_node,1))
     e = np.zeros((1,num_output_node))
@@ -31,8 +42,8 @@ def train(num_reservoir_node, num_output_node, train_data_output, states, weight
     weight_output = weight_output_initial
     #*******************************************************************#
     ###########  Training Using Recursive Least Square ##################
-    for j in range(2):
-        for i in range(len(train_data_output)):
+    for j in range(1):
+        for i in range(Length_Training):
             
             re = 1 + np.dot(np.dot(np.array([states[i]]), P), np.array([states[i]]).T)
             kp = np.dot(P,np.array([states[i]]).T )/ re

@@ -20,12 +20,13 @@ num_reservoir_node =200
 num_output_node = 3
 
 ##################################################################
-bias = None
-if bias is None:
-    num_reservoir_node = num_reservoir_node
+input_bias = 1
+if input_bias is None:
+    pass
 else:
-    num_reservoir_node = num_reservoir_node + 1
+    num_input_node = num_input_node + 1
 ##################################################################
+output_return = None
 #############  parameters of training and data####################
 ##################################################################
 
@@ -73,7 +74,7 @@ test_data_output= teacher_output[length_train: length_train + length_prediction]
 weight_input_init = (np.random.normal(0, 1, num_input_node * num_reservoir_node).reshape((num_input_node, num_reservoir_node)) * 2 - 1) * 0.1
 weight_reservoir_init = np.zeros((num_reservoir_node, num_reservoir_node))
 weight_output_init = np.zeros((num_reservoir_node, num_output_node))
-
+weight_return_init = (np.random.normal(0, 1, num_output_node * num_reservoir_node).reshape((num_output_node, num_reservoir_node)) * 2 - 1) * 0.1
 ############### Set Reservoir Weight  #################################
 matrix_nonzero1 = np.random.randint(0,2,(num_reservoir_node,num_reservoir_node))
 matrix_nonzero2 = np.random.randint(0,2,(num_reservoir_node,num_reservoir_node))
@@ -83,9 +84,11 @@ spectral_radius = np.max(np.abs(linalg.eigvals(weights)))
 weight_reservoir = weights / spectral_radius *0.997
 
 ##############  Set  Input Weight       #################################
-matrix_nonzero = np.random.randint(0,2,(num_input_node, num_reservoir_node))
-weight_input_init = weight_input_init * matrix_nonzero
-
+# matrix_nonzero = np.random.randint(0,2,(num_input_node, num_reservoir_node))
+# weight_input_init = weight_input_init * matrix_nonzero
+##############  Set Return Weight   #####################################
+matrix_nonzero = np.random.randint(0,2,(num_output_node, num_reservoir_node))
+weight_return_init = matrix_nonzero * weight_return_init
 #************************************************************************************************************************************************#
 
 ##############################################################################################################################
@@ -96,15 +99,18 @@ weight_input_init = weight_input_init * matrix_nonzero
 initial_state = np.zeros((len(teacher_data), num_reservoir_node))
 states = get_reservoir_states(inputs = teacher_data, states_init = initial_state, 
                                 weight_input= weight_input_init, weight_reservoir=weight_reservoir_init, 
-                                leak_rate = LEAK_RATE)
+                                leak_rate = LEAK_RATE, weight_return = weight_return_init,
+                                output_return = None, input_bias= input_bias)
 # np.savetxt('states.txt', states)
 # states = np.loadtxt("states.txt")
+################# state after wash time ###############################
+states = states[wash_time: ]
 #####################  Train  Output Weight   #########################
 
 weight_output =  train(num_reservoir_node = num_reservoir_node, num_output_node = num_output_node, 
                         train_data_output = train_data_output,
                         states = states, weight_output_initial = weight_output_init,
-                        wash_time = wash_time, LAMBDA = 0.00221)
+                        LAMBDA = 0.00221)
 
 #**********************************************************************************************************************************************#
 ############################################################################################################################### 
@@ -120,17 +126,23 @@ weight_output =  train(num_reservoir_node = num_reservoir_node, num_output_node 
 
 #################  One Step Prediction  ##################################
 one_step_predict_train = one_step_predict(num_output_node= num_output_node, 
-                                            states=states[wash_time:], weight_output = weight_output, 
+                                            states=states, weight_output = weight_output, 
                                             length_prediction= length_train)
 
-one_step_predict_test = one_step_predict(num_output_node= num_output_node, states=states[wash_time+length_train:], 
+one_step_predict_test = one_step_predict(num_output_node= num_output_node, states=states[length_train:], 
                                         weight_output = weight_output, 
                                         length_prediction= length_prediction)
 
 print("length of one step predict test")
 print(len(one_step_predict_test))
 print("length of test data out put")
-print(len(test_data_output))    
+print(len(test_data_output))
+print("length of states")
+print(len(states))
+print("length of train")
+print(length_train)
+print("length of train data output")
+print(len(train_data_output))
 rmse_training = RMSE(one_step_predict_train, train_data_output)
 rmse_test = RMSE(one_step_predict_test, test_data_output)
 print("####################################")
