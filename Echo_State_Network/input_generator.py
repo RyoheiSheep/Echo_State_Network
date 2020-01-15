@@ -3,7 +3,6 @@ import scipy.stats as sp
 # from numba import jit 
 # import signalz
 
-
 class InputGenerator:
 
     def __init__(self, start_time, end_time, num_time_steps):
