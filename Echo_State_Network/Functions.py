@@ -3,7 +3,6 @@ import numpy as np
     ###################################################################
     ##############  Get Reservoir State   #############################
     ###################################################################
-
 # @jit
 def get_reservoir_states(inputs, states_init, weight_input, weight_reservoir, leak_rate):
     states = states_init

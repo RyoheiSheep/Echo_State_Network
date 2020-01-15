@@ -10,7 +10,6 @@ import time
 from Functions import get_reservoir_states, train, one_step_predict, RMSE
 
 
-
 start_time = time.time()
 #################################################################
 ####definition of parameters of Echo State Network###############
