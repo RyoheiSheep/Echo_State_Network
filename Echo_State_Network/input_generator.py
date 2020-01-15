@@ -64,14 +64,14 @@ class InputGenerator:
             # xs  = (xs- np.min(xs))/(np.max(xs)-np.min(xs))
             # ys  = (ys- np.min(ys))/(np.max(ys)-np.min(ys))
             # zs  = (zs- np.min(zs))/(np.max(zs)-np.min(zs))
-        # xs = sp.stats.zscore(xs, axis = None)
-        # ys = sp.stats.zscore(ys, axis =  None)
-        # zs = sp.stats.zscore(zs, axis =  None)
+        xs = sp.stats.zscore(xs, axis = None)
+        ys = sp.stats.zscore(ys, axis =  None)
+        zs = sp.stats.zscore(zs, axis =  None)
         
         matrix = np.append(np.append([xs],[ys], axis = 0),[zs], axis = 0)
         np.savetxt('Lorentz.txt', matrix.T)
     
-T = 600
+T = 610
 RATIO_TRAIN = 0.6
 dt = 0.001
 AMPLITUDE = 0.9
