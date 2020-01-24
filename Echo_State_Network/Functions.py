@@ -18,19 +18,19 @@ def get_reservoir_states(inputs, states_init, weight_input, weight_reservoir, le
     #         states[i] = (1-leak_rate)* np.array([states[i-1]]) + leak_rate *np.tanh(np.dot(np.array([inputs[i-1]]), weight_input) +np.dot( np.array([states[i-1]]), weight_reservoir) )
     #     return states
     if input_bias is None:
-         for i in range(1, len(inputs),1):
-            states[i] = (1-leak_rate)* np.array([states[i-1]]) + leak_rate *np.tanh(np.dot(np.array([inputs[i-1]]), weight_input) +np.dot( np.array([states[i-1]]), weight_reservoir))
+        for i in range(1, len(inputs),1):
+            states[i] = np.tanh((1-leak_rate)* np.array([states[i-1]]) + leak_rate * np.dot(np.array([inputs[i-1]]), weight_input) +np.dot( np.array([states[i-1]]), weight_reservoir))
     else: 
         inputs =  np.column_stack((np.ones((inputs.shape[0],1)),inputs))
         for i in range(1, len(inputs),1):
-            states[i] = (1-leak_rate)* np.array([states[i-1]]) + leak_rate *np.tanh(np.dot(np.array([inputs[i-1]]), weight_input) +np.dot( np.array([states[i-1]]), weight_reservoir))
+            states[i] =  np.tanh((1-leak_rate)* np.array([states[i-1]])+  leak_rate * np.dot(np.array([inputs[i-1]]), weight_input) +np.dot( np.array([states[i-1]]), weight_reservoir))
     return states
     ######################################################################
     #####################   Train  #######################################
     ######################################################################
 # @jit
 def train(num_reservoir_node, num_output_node, train_data_output, states, weight_output_initial, LAMBDA = 0.00221):
-    
+
     ################# Set Length of Training #########
     
     Length_Training = len(train_data_output)
@@ -72,26 +72,25 @@ def one_step_predict(num_output_node, states, weight_output, length_prediction):
 ########################################################################
 
 # @jit
-def free_run_predict(states, num_output_node, weight_output, length_train, weight_input, weight_reservoir, length_freerun):
-    l = length_train - 1
-    state_free_run = np.array([states[l]])
+def free_run_predict(states, num_output_node, weight_output, weight_input, weight_reservoir, length_freerun, leak_rate, input_bias = None):
+    state_free_run = states[0]
     free_run_predict_result = np.zeros((length_freerun, num_output_node))
-    # print("freerun predict")
-    # print(free_run_predict)
-    for i in range(length_freerun):
-        # print(" 1state_free_run @ weight_output")
-        # print( state_free_run @ weight_output )
-        # print("state type 8888888")
-        # print(state_free_run.shape)
-        # print("2free run predict")
-        # print(free_run_predict)
-        free_run_predict_result[i] = state_free_run @ weight_output
-        # print("free run predict -1")
-        # print(np.array([free_run_predict[-1]]).shape)
-        # print("3np.array([free_run_predict[-1]]) @ weight_input + np.array([state_free_run]) @ weight_reservoir")
-        # print((np.array(free_run_predict[-1]) @ weight_input + np.array(state_free_run) @ weight_reservoir).shape)
-        state_free_run = np.tanh(np.array(free_run_predict_result[i]) @ weight_input + np.array(state_free_run) @ weight_reservoir)
+    if input_bias is None:
+      for i in range(length_freerun):
+            free_run_predict_result[i] = np.array([state_free_run]) @ weight_output
+            state_free_run = (1-leak_rate)* np.array([state_free_run]) + leak_rate *np.tanh(np.dot(np.array([free_run_predict_result[i]]), weight_input) +np.dot( np.array([state_free_run]), weight_reservoir))
+    else: 
+        for i in range(length_freerun):
+            print("shape of state free run")
+            print(state_free_run.shape)
+            print("state free run")
+            print(state_free_run)
+            free_run_predict_result[i] =state_free_run @ weight_output
+            inputs =  np.concatenate([np.ones((1,1)),np.array([free_run_predict_result[i]])], axis =1)
+            state_free_run = (1-leak_rate)* np.array([state_free_run]) + leak_rate *np.tanh(np.dot(inputs, weight_input) +np.dot( np.array([state_free_run]), weight_reservoir))
+      
     return free_run_predict_result
+    
 
 ##########################################################################
 ###############  Calculation of Eroor ####################################
