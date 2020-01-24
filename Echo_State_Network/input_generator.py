@@ -38,9 +38,9 @@ class InputGenerator:
         t=0             ##### 初期時間######
         dt = 0.01       ##### 微分間隔######
         stepCnt = int((self.end_time-self.start_time)/dt) ######時間ステップ##
-        xs = np.zeros(stepCnt +1) 
-        ys = np.zeros(stepCnt +1)
-        zs = np.zeros(stepCnt +1)
+        xs = np.zeros(stepCnt ) 
+        ys = np.zeros(stepCnt )
+        zs = np.zeros(stepCnt )
                 
         xs[0], ys[0], zs[0] = (0.1, 0.5, 1.2)
         
@@ -107,13 +107,13 @@ class InputGenerator:
         t=0             ##### 初期時間######
         dt = 0.01       ##### 微分間隔######
         stepCnt = int((self.end_time-self.start_time)/dt) ######時間ステップ##
-        xs = np.zeros(stepCnt +1) 
-        ys = np.zeros(stepCnt +1)
-        zs = np.zeros(stepCnt +1)
+        xs = np.zeros(stepCnt ) 
+        ys = np.zeros(stepCnt )
+        zs = np.zeros(stepCnt )
                 
         xs[0], ys[0], zs[0] = (0.1, 0.5, 1.2)
         
-        for i in range(stepCnt):
+        for i in range(stepCnt-1):
             x,y,z=xs[i],ys[i],zs[i]
         
             k0 = dt * lorenz(x,y,z)
@@ -139,7 +139,7 @@ class InputGenerator:
         matrix = np.append(np.append([xs],[ys], axis = 0),[zs], axis = 0)
         np.savetxt('Rossler.txt', matrix.T)
     
-T = 610
+T = 6000
 RATIO_TRAIN = 0.6
 dt = 0.001
 AMPLITUDE = 0.9
@@ -147,7 +147,7 @@ LEAK_RATE=0.02
 num_time_step = int(T/dt) +1000
 
 GeneratingInput = InputGenerator(start_time= 0, end_time= T, num_time_steps= num_time_step)
-GeneratingInput.generate_lorentz()
+# GeneratingInput.generate_lorentz()
 # GeneratingInput.generate_logistic()
 # GeneratingInput.generate_henon()
-# GeneratingInput.generate_rossler()
+GeneratingInput.generate_rossler()
