@@ -19,11 +19,11 @@ def get_reservoir_states(inputs, states_init, weight_input, weight_reservoir, le
     #     return states
     if input_bias is None:
         for i in range(1, len(inputs),1):
-            states[i] = np.tanh((1-leak_rate)* np.array([states[i-1]]) + leak_rate * np.dot(np.array([inputs[i-1]]), weight_input) +np.dot( np.array([states[i-1]]), weight_reservoir))
+            states[i] = np.tanh((1-leak_rate)* np.array([states[i-1]]) + leak_rate * np.dot(np.array([inputs[i]]), weight_input) +np.dot( np.array([states[i-1]]), weight_reservoir))
     else: 
         inputs =  np.column_stack((np.ones((inputs.shape[0],1)),inputs))
         for i in range(1, len(inputs),1):
-            states[i] =  np.tanh((1-leak_rate)* np.array([states[i-1]])+  leak_rate * np.dot(np.array([inputs[i-1]]), weight_input) +np.dot( np.array([states[i-1]]), weight_reservoir))
+            states[i] =  np.tanh((1-leak_rate)* np.array([states[i-1]])+  leak_rate * np.dot(np.array([inputs[i]]), weight_input) +np.dot( np.array([states[i-1]]), weight_reservoir))
     return states
     ######################################################################
     #####################   Train  #######################################
