@@ -16,7 +16,7 @@ start_time = time.time()
 #################################################################
 
 num_input_node = 3
-num_reservoir_node =200
+num_reservoir_node =100
 num_output_node = 3
 
 ##################################################################
@@ -41,21 +41,23 @@ num_time_step = int(T/dt)
 ################  Parameters of Training and Prediction ##########
 ##################################################################
 
-wash_time = 100
-length_train = 50000
-length_prediction = 9000
+wash_time = 100+1
+length_train = 20000
+length_prediction = 5000
 length_free_run = 1000
 # length_freerun_prediction  = 500
     
 RATIO_TRAIN = 0.6
-LEAK_RATE=0.02
+LEAK_RATE=0.025
 
 #**************************************************************************************************************#
 
 ######################################################################
 ############### preparation of data #################################
 #####################################################################
-teacher_data = np.loadtxt("Rossler.txt")[::10]       ######学習用データ
+# teacher_data = np.loadtxt("Rossler.txt")[::5]       ######学習用データ
+teacher_data = np.loadtxt("Rossler.txt")   ######学習用データ
+
 # teacher_input_init = np.array([np.loadtxt("logistic.txt")]).T
 teacher_input = teacher_data[wash_time :-1]
 teacher_output = teacher_data[wash_time +1:]
@@ -64,7 +66,7 @@ train_data_input = teacher_input[:length_train]           #学習用入力
 train_data_output = teacher_output[:length_train]      #学習用出力
 
 test_data_input = teacher_input[length_train: length_train + length_prediction]
-test_data_output= teacher_output[length_train: length_train + length_prediction]
+test_data_output= teacher_output[length_train-1: length_train + length_prediction-1]
 
 
 
@@ -88,8 +90,8 @@ spectral_radius = np.max(np.abs(linalg.eigvals(weights)))
 weight_reservoir = weights / spectral_radius *0.997
 
 ##############  Set  Input Weight       #################################
-# matrix_nonzero = np.random.randint(0,2,(num_input_node, num_reservoir_node))
-# weight_input_init = weight_input_init * matrix_nonzero
+matrix_nonzero = np.random.randint(0,2,(num_input_node, num_reservoir_node))
+weight_input_init = weight_input_init * matrix_nonzero
 ##############  Set Return Weight   #####################################
 matrix_nonzero = np.random.randint(0,2,(num_output_node, num_reservoir_node))
 weight_return_init = matrix_nonzero * weight_return_init
@@ -111,13 +113,14 @@ states = get_reservoir_states(inputs = teacher_data, states_init = initial_state
 # states = np.loadtxt("states.txt")
 ################# state after wash time ###############################
 states = states[wash_time: ]
+np.savetxt("Rossler_reservoir_states_node200.txt", states)
 #####################  Train  Output Weight   #########################
 
 if output_bias is None:
     weight_output =  train(num_reservoir_node = num_reservoir_node, num_output_node = num_output_node, 
                             train_data_output = train_data_output,
                             states = states, weight_output_initial = weight_output_init,
-                            LAMBDA = 0.00221)
+                            LAMBDA = 0.00231)
 else:
     states = np.column_stack((np.ones((states.shape[0],1)),states))
     weight_output_init = np.zeros((num_reservoir_node+1, num_output_node))
@@ -125,7 +128,7 @@ else:
                             train_data_output = train_data_output,
                             states = states, 
                             weight_output_initial = weight_output_init,
-                            LAMBDA = 0.00221)
+                            LAMBDA = 0.00521)
 #**********************************************************************************************************************************************#
 ############################################################################################################################### 
 ####################   Prediction #############################################################################################
@@ -194,10 +197,13 @@ print(process_time)#############################
 
 fig1 = plt.figure()
 ax1 = Axes3D(fig1)
-ax1.plot(one_step_predict_train.T[0,:], one_step_predict_train.T[1,:], one_step_predict_train.T[2,:], color = "blue", linewidth = 1 )
+ax1.plot(one_step_predict_train.T[0,:], one_step_predict_train.T[1,:], one_step_predict_train.T[2,:], color = "blue", linewidth = 0.1 )
 ax1.set_title(" One Step Prediction")
 
-
+plt.figure()
+plt.scatter(one_step_predict_test.T[0,:],one_step_predict_test.T[1,:], color = 'blue', lw = 0.5)
+plt.xlabel("variable x")
+plt.ylabel("variable y")
 ################# Comparison of Real Time Series and One Step Prediction ##############################
 
 # ax.plot(teacher_input_init.T[0,length_train:], teacher_input_init.T[1,length_train:], teacher_input_init.T[2,length_train:], color = "magenta", linewidth = 0.1)
@@ -206,8 +212,8 @@ ax1.set_title(" One Step Prediction")
 # print(one_step_predict_result)
 plt.figure()
 # plt.plot(free_run_predict_result.T[0,:100], lw = 1.0, color ="red", label ="x of free runnning prediction")
-plt.plot(one_step_predict_test.T[0,:100],lw = 1.0,  color = "blue", label ="one step prediction")
-plt.plot(test_data_output.T[0][:100],lw = 1.0,  color = "red", label ="real time series")
+plt.plot(one_step_predict_test.T[0,:1000],lw = 1.0,  color = "blue", label ="one step prediction")
+plt.plot(test_data_output.T[0][:1000],lw = 1.0,  color = "red", label ="real time series")
 plt.title('x of one step prediction and real time series')
 plt.legend()
 
@@ -231,10 +237,13 @@ plt.legend()
 
 
 ############## state[t],   state[t + delta],   state[t + 2delta]########################
-fig2= plt.figure()
-ax2 = Axes3D(fig2)
-ax2.plot(states.T[1,wash_time: 10000], states.T[1,wash_time+15: 10015], states.T[1,wash_time+30: 10030], color = "red", linewidth = 0.1 )
-ax2.set_title("states delayed axis")
+fig= plt.figure()
+ax = Axes3D(fig)
+ax.plot(states.T[1,wash_time: 10000], states.T[1,wash_time+1: 10001], states.T[1,wash_time+2: 10002], color = "red", linewidth = 0.1 )
+ax.set_title("states delayed axis")
+ax.set_xlabel("$x_{1}(t)$")
+ax.set_ylabel("$x_{1}(t+1)$")
+ax.set_zlabel("$x_{1}(t+2)$")
 
 #######################################################################################
 ##################state[1], state [2], state[3]#######################################
