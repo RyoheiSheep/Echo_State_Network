@@ -1,6 +1,7 @@
 import numpy as np
 import scipy.stats as sp 
-# from numba import jit 
+from numba import jit 
+import time
 # import signalz
 
 class InputGenerator:
@@ -88,15 +89,15 @@ class InputGenerator:
                     
             xs[i+1], ys[i+1] = henon(x, y)
                     
-            # xs  = (xs- np.min(xs))/(np.max(xs)-np.min(xs))
-            # ys  = (ys- np.min(ys))/(np.max(ys)-np.min(ys))
-            # zs  = (zs- np.min(zs))/(np.max(zs)-np.min(zs))
+            
         xs = sp.stats.zscore(xs, axis = None)
         ys = sp.stats.zscore(ys, axis =  None)
-                
+        xs  = (xs- np.min(xs))/(np.max(xs)-np.min(xs))
+        ys  = (ys- np.min(ys))/(np.max(ys)-np.min(ys))        
         matrix = np.append([xs],[ys], axis = 0)
-        np.savetxt('Henon.txt', matrix.T)
         
+        np.savetxt('Henon.txt', matrix.T)
+          
     def generate_rossler(self):
         def lorenz(x, y, z, a=0.15, b = 0.20,c = 10.0 ):
             x_dot = -y -z
@@ -129,13 +130,14 @@ class InputGenerator:
             ys[i+1] = ys[i] + dy
             zs[i+1] = zs[i] + dz
         
-            # xs  = (xs- np.min(xs))/(np.max(xs)-np.min(xs))
-            # ys  = (ys- np.min(ys))/(np.max(ys)-np.min(ys))
-            # zs  = (zs- np.min(zs))/(np.max(zs)-np.min(zs))
+        
         xs = sp.stats.zscore(xs, axis = None)
         ys = sp.stats.zscore(ys, axis =  None)
         zs = sp.stats.zscore(zs, axis =  None)
-        
+        xs  = (xs- np.min(xs))/(np.max(xs)-np.min(xs))
+        ys  = (ys- np.min(ys))/(np.max(ys)-np.min(ys))
+        zs  = (zs- np.min(zs))/(np.max(zs)-np.min(zs))
+    
         matrix = np.append(np.append([xs],[ys], axis = 0),[zs], axis = 0)
         np.savetxt('Rossler.txt', matrix.T)
     
@@ -145,9 +147,11 @@ dt = 0.001
 AMPLITUDE = 0.9
 LEAK_RATE=0.02
 num_time_step = int(T/dt) +1000
+start_time = time.time()
 
 GeneratingInput = InputGenerator(start_time= 0, end_time= T, num_time_steps= num_time_step)
 # GeneratingInput.generate_lorentz()
 # GeneratingInput.generate_logistic()
-# GeneratingInput.generate_henon()
+GeneratingInput.generate_henon()
 GeneratingInput.generate_rossler()
+print("processing time is" + str(time.time()-start_time))
